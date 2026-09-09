@@ -147,6 +147,8 @@ static void cache_push_front(eb_lru_cache_t *c, eb_lru_node_t *n) {
 
 bool eb_cache_put(eb_lru_cache_t *c, const char *key, const void *val, size_t sz, uint32_t ttl) {
     if (!c || !key || !val) return false;
+    /* Reject entries that can never fit before evicting usable data. */
+    if (c->max_entries <= 0 || (c->max_bytes && sz > c->max_bytes)) return false;
     /* Check if already exists */
     for (int i = 0; i < c->count; i++) {
         if (strcmp(c->entries[i].key, key) == 0) {
@@ -168,14 +170,15 @@ bool eb_cache_put(eb_lru_cache_t *c, const char *key, const void *val, size_t sz
      * a value larger than the whole byte budget, or a cache configured with
      * max_entries == 0. eb_cache_evict_lru() is a no-op once the list is
      * empty, so the unguarded loop spun here forever. */
-    while (c->count >= c->max_entries || (c->max_bytes && c->current_bytes + sz > c->max_bytes)) {
+    while (c->count >= c->max_entries ||
+           (c->max_bytes && c->current_bytes > c->max_bytes - sz)) {
         int before = c->count;
         eb_cache_evict_lru(c);
         if (c->count >= before) break;
     }
     /* Still does not fit after evicting everything it could — refuse it. */
     if (c->count >= c->max_entries || c->count >= EB_CACHE_MAX_ENTRIES) return false;
-    if (c->max_bytes && c->current_bytes + sz > c->max_bytes) return false;
+    if (c->max_bytes && c->current_bytes > c->max_bytes - sz) return false;
 
     eb_lru_node_t *n = &c->entries[c->count];
     memset(n, 0, sizeof(*n));

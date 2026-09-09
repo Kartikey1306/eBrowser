@@ -12,7 +12,12 @@
 
 static int s_pass = 0, s_fail = 0;
 #define TEST(name) static void name(void)
-#define RUN(name) do { printf("  %s... ", #name); name(); printf("PASS\n"); s_pass++; } while(0)
+#define RUN(name) do { \
+    int failures_before = s_fail; \
+    printf("  %s... ", #name); \
+    name(); \
+    if (s_fail == failures_before) { printf("PASS\n"); s_pass++; } \
+} while(0)
 #define ASSERT(cond) do { if(!(cond)) { printf("FAIL: %s:%d: %s\n", __FILE__, __LINE__, #cond); s_fail++; return; } } while(0)
 
 /* Regression: the guard that rejects a NULL cache dereferenced it first. */
@@ -35,17 +40,23 @@ TEST(test_put_larger_than_byte_budget_is_refused) {
     eb_cache_init(&c, 8, 64);
     char big[256];
     memset(big, 'x', sizeof(big));
+    ASSERT(eb_cache_put(&c, "keep", "existing", 9, 0) == true);
     ASSERT(eb_cache_put(&c, "big", big, sizeof(big), 0) == false);
-    ASSERT(c.count == 0);
+    ASSERT(c.count == 1);
+    ASSERT(c.current_bytes == 9);
+    ASSERT(eb_cache_get(&c, "keep", NULL) != NULL);
     eb_cache_destroy(&c);
 }
 
 /* Regression: max_entries == 0 makes `count >= max_entries` true forever. */
 TEST(test_put_into_zero_entry_cache_is_refused) {
     eb_lru_cache_t c;
-    eb_cache_init(&c, 0, 0);
+    eb_cache_init(&c, 1, 0);
+    ASSERT(eb_cache_put(&c, "keep", "v", 1, 0) == true);
+    c.max_entries = 0;
     ASSERT(eb_cache_put(&c, "k", "v", 1, 0) == false);
-    ASSERT(c.count == 0);
+    ASSERT(c.count == 1);
+    ASSERT(eb_cache_get(&c, "keep", NULL) != NULL);
     eb_cache_destroy(&c);
 }
 
