@@ -102,20 +102,18 @@ bool eb_priv_should_allow_cookie(const eb_privacy_t *p, const char *dom,
     return true;
 }
 
-/* strncpy(dst, src, max-1) leaves dst unterminated whenever src is max-1 bytes
- * or longer, and every caller of eb_priv_apply_referrer() treats ref as a C
- * string. Terminate explicitly instead. */
-static void referrer_copy(char *dst, const char *src, size_t max) {
-    if (!max) return;
-    strncpy(dst, src, max - 1);
-    dst[max - 1] = '\0';
+static bool referrer_copy(char *dst, const char *src, size_t max) {
+    size_t len = strlen(src);
+    if (len >= max) return false;
+    memcpy(dst, src, len + 1);
+    return true;
 }
 
 int eb_priv_apply_referrer(const eb_privacy_t *p, const char *from,
                             const char *to, char *ref, size_t max) {
     if (!p || !from || !to || !ref || max == 0) return -1;
-    /* Every path below returns a referrer or none; start from none so no exit
-     * can leave the caller's buffer holding whatever was there before. */
+    /* Referrer truncation can disclose a malformed partial URL. Start from no
+     * referrer and populate it only when the complete policy result fits. */
     ref[0] = '\0';
     switch (p->referrer_policy) {
     /* p->referrers_stripped is not incremented here: p is const, so the
@@ -123,18 +121,18 @@ int eb_priv_apply_referrer(const eb_privacy_t *p, const char *from,
      * has never moved. Fixing that means changing this function's signature,
      * which is a public-API decision rather than a bounds fix. */
     case EB_REF_NONE: return 0;
+    case EB_REF_FULL:
+        referrer_copy(ref, from, max);
+        return 0;
     case EB_REF_ORIGIN_ONLY: {
         const char *s = strstr(from, "://");
         if (!s) return 0;
         const char *e = strchr(s+3, '/');
         size_t len = e ? (size_t)(e-from) : strlen(from);
-        /* Two bytes are written after the origin — the trailing '/' and the
-         * NUL — so the bound must reserve both. Clamping to max-1 reserved
-         * only the NUL and put ref[len+1] one byte past the buffer. */
-        if (max >= 2) {
-            if (len > max - 2) len = max - 2;
-            memcpy(ref, from, len); ref[len]='/'; ref[len+1]='\0';
-        }
+        /* Reserve the trailing slash and NUL. If the complete origin does not
+         * fit, keep the fail-closed empty referrer instead of truncating it. */
+        if (len > max - 1 || len + 1 >= max) return 0;
+        memcpy(ref, from, len); ref[len]='/'; ref[len+1]='\0';
         return 0;
     }
     case EB_REF_SAME_ORIGIN: {
@@ -145,9 +143,11 @@ int eb_priv_apply_referrer(const eb_privacy_t *p, const char *from,
         size_t fl = fe ? (size_t)(fe-from) : strlen(from);
         size_t tl = te ? (size_t)(te-to) : strlen(to);
         if (fl != tl || strncmp(from, to, fl) != 0) return 0;
-        referrer_copy(ref, from, max); return 0;
+        referrer_copy(ref, from, max);
+        return 0;
     }
-    default: referrer_copy(ref, from, max); return 0;
+    default:
+        return 0;
     }
 }
 
