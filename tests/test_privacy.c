@@ -129,6 +129,31 @@ TEST(test_referrer_origin_only) {
     eb_priv_destroy(&p);
 }
 
+TEST(test_referrer_origin_only_truncation) {
+    /* Boundary: "https://source.com" is 18 chars; origin + '/' + '\0' needs
+       exactly 20 bytes. The old clamp wrote the terminator one past the
+       end whenever the origin did not fit -- the sentinel bytes catch it. */
+    eb_privacy_t p;
+    eb_priv_init(&p);
+    p.referrer_policy = EB_REF_ORIGIN_ONLY;
+
+    char ref[32];
+    memset(ref, 'X', sizeof(ref));
+    eb_priv_apply_referrer(&p, "https://source.com/secret/page", "https://dest.com", ref, 20);
+    ASSERT(strcmp(ref, "https://source.com/") == 0);
+    ASSERT(ref[20] == 'X');
+
+    memset(ref, 'X', sizeof(ref));
+    eb_priv_apply_referrer(&p, "https://source.com/secret/page", "https://dest.com", ref, 19);
+    ASSERT(strcmp(ref, "https://source.co/") == 0);
+    ASSERT(ref[19] == 'X');
+
+    memset(ref, 'X', sizeof(ref));
+    eb_priv_apply_referrer(&p, "https://source.com/secret/page", "https://dest.com", ref, 2);
+    ASSERT(ref[2] == 'X');
+    eb_priv_destroy(&p);
+}
+
 TEST(test_exceptions) {
     eb_privacy_t p;
     eb_priv_init(&p);
@@ -266,7 +291,7 @@ int main(void) {
     RUN(test_clean_url_all_tracking);
     RUN(test_cookie_policy_block_third_party); RUN(test_cookie_policy_block_all);
     RUN(test_incognito_mode); RUN(test_tor_mode);
-    RUN(test_referrer_none); RUN(test_referrer_origin_only);
+    RUN(test_referrer_none); RUN(test_referrer_origin_only); RUN(test_referrer_origin_only_truncation);
     RUN(test_exceptions); RUN(test_header_injection);
     RUN(test_tb_init); RUN(test_tb_parse_domain_filter);
     RUN(test_tb_parse_exception); RUN(test_tb_parse_comment);
