@@ -60,6 +60,27 @@ jobs:
           files: coverage.xml
           flags: ebrowser-py${{ matrix.python-version }}
 
+  # ── Native CMake Build & Test ─────────────────────────────────────────────
+  # Runs the native C11 engine suite on every PR (issue #29). Mirrors the
+  # Weekly full-build steps, but test failures fail the job (no `|| true`).
+  native:
+    name: Native (CMake ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Configure
+        run: cmake -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build --config Release
+      - name: Test
+        run: ctest --test-dir build --output-on-failure -C Release
+
   # ── Build Python Package ──────────────────────────────────────────────────
   build:
     name: Build Python Package
