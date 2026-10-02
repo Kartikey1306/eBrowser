@@ -102,35 +102,52 @@ bool eb_priv_should_allow_cookie(const eb_privacy_t *p, const char *dom,
     return true;
 }
 
+static bool referrer_copy(char *dst, const char *src, size_t max) {
+    size_t len = strlen(src);
+    if (len >= max) return false;
+    memcpy(dst, src, len + 1);
+    return true;
+}
+
 int eb_priv_apply_referrer(const eb_privacy_t *p, const char *from,
                             const char *to, char *ref, size_t max) {
-    if (!p || !from || !to || !ref) return -1;
+    if (!p || !from || !to || !ref || max == 0) return -1;
+    /* Referrer truncation can disclose a malformed partial URL. Start from no
+     * referrer and populate it only when the complete policy result fits. */
+    ref[0] = '\0';
     switch (p->referrer_policy) {
-    case EB_REF_NONE: ref[0] = '\0'; p->referrers_stripped; return 0;
+    /* p->referrers_stripped is not incremented here: p is const, so the
+     * statement that used to sit on this line had no effect and the counter
+     * has never moved. Fixing that means changing this function's signature,
+     * which is a public-API decision rather than a bounds fix. */
+    case EB_REF_NONE: return 0;
+    case EB_REF_FULL:
+        referrer_copy(ref, from, max);
+        return 0;
     case EB_REF_ORIGIN_ONLY: {
         const char *s = strstr(from, "://");
-        if (!s) { ref[0]='\0'; return 0; }
+        if (!s) return 0;
         const char *e = strchr(s+3, '/');
         size_t len = e ? (size_t)(e-from) : strlen(from);
-        /* The write is len origin bytes, then '/', then '\0': keep all of
-           it inside the caller's buffer. The old clamp (len = max-1) left
-           ref[max] written past the end. */
-        if (max == 0) return 0;
-        if (max == 1) { ref[0] = '\0'; return 0; }
-        if (len > max - 2) len = max - 2;
-        memcpy(ref, from, len); ref[len]='/'; ref[len+1]='\0'; return 0;
+        /* Reserve the trailing slash and NUL. If the complete origin does not
+         * fit, keep the fail-closed empty referrer instead of truncating it. */
+        if (len > max - 1 || len + 1 >= max) return 0;
+        memcpy(ref, from, len); ref[len]='/'; ref[len+1]='\0';
+        return 0;
     }
     case EB_REF_SAME_ORIGIN: {
         /* Only send referrer if same origin */
         const char *fs = strstr(from, "://"), *ts = strstr(to, "://");
-        if (!fs || !ts) { ref[0]='\0'; return 0; }
+        if (!fs || !ts) return 0;
         const char *fe = strchr(fs+3, '/'), *te = strchr(ts+3, '/');
         size_t fl = fe ? (size_t)(fe-from) : strlen(from);
         size_t tl = te ? (size_t)(te-to) : strlen(to);
-        if (fl != tl || strncmp(from, to, fl) != 0) { ref[0]='\0'; return 0; }
-        strncpy(ref, from, max-1); return 0;
+        if (fl != tl || strncmp(from, to, fl) != 0) return 0;
+        referrer_copy(ref, from, max);
+        return 0;
     }
-    default: strncpy(ref, from, max-1); return 0;
+    default:
+        return 0;
     }
 }
 

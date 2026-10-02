@@ -6,7 +6,12 @@
 
 static int s_pass = 0, s_fail = 0;
 #define TEST(name) static void name(void)
-#define RUN(name) do { printf("  %s... ", #name); name(); printf("PASS\n"); s_pass++; } while(0)
+#define RUN(name) do { \
+    int failures_before = s_fail; \
+    printf("  %s... ", #name); \
+    name(); \
+    if (s_fail == failures_before) { printf("PASS\n"); s_pass++; } \
+} while(0)
 #define ASSERT(cond) do { if(!(cond)) { printf("FAIL: %s:%d: %s\n", __FILE__, __LINE__, #cond); s_fail++; return; } } while(0)
 
 /* --- Privacy --- */
@@ -129,10 +134,78 @@ TEST(test_referrer_origin_only) {
     eb_priv_destroy(&p);
 }
 
+/* Regression: a partial origin is not a valid referrer and can disclose an
+ * ambiguous host. If the complete origin cannot fit, emit no referrer. */
+TEST(test_referrer_origin_only_fails_closed_when_too_long) {
+    eb_privacy_t p;
+    eb_priv_init(&p);
+    p.referrer_policy = EB_REF_ORIGIN_ONLY;
+    struct { char ref[24]; char canary[8]; } buf;
+    memset(&buf, 0, sizeof(buf));
+    memset(buf.canary, '#', sizeof(buf.canary));
+    /* Origin is 24 bytes — exactly sizeof(buf.ref) — so it cannot fit with
+     * the required trailing slash and NUL terminator. */
+    eb_priv_apply_referrer(&p, "https://averylongdom.com/path/here",
+                           "https://dest.com", buf.ref, sizeof(buf.ref));
+    for (size_t i = 0; i < sizeof(buf.canary); i++) ASSERT(buf.canary[i] == '#');
+    ASSERT(buf.ref[0] == '\0');
+    eb_priv_destroy(&p);
+}
+
+/* Full and same-origin policies must not leak truncated partial URLs. */
+TEST(test_referrer_fails_closed_when_full_url_is_too_long) {
+    eb_privacy_t p;
+    eb_priv_init(&p);
+    const char *url = "https://averylongdomainname.example.com/deep/path";
+    char ref[16];
+
+    p.referrer_policy = EB_REF_FULL;
+    memset(ref, 'A', sizeof(ref));
+    eb_priv_apply_referrer(&p, url, url, ref, sizeof(ref));
+    ASSERT(ref[0] == '\0');
+
+    p.referrer_policy = EB_REF_SAME_ORIGIN;
+    memset(ref, 'A', sizeof(ref));
+    eb_priv_apply_referrer(&p, url, url, ref, sizeof(ref));
+    ASSERT(ref[0] == '\0');
+
+    eb_priv_destroy(&p);
+}
+
+TEST(test_referrer_full_copies_complete_url) {
+    eb_privacy_t p;
+    eb_priv_init(&p);
+    p.referrer_policy = EB_REF_FULL;
+    char ref[64];
+    ASSERT(eb_priv_apply_referrer(&p, "https://a.com/path", "https://b.com/", ref, sizeof(ref)) == 0);
+    ASSERT(strcmp(ref, "https://a.com/path") == 0);
+    eb_priv_destroy(&p);
+}
+
+TEST(test_referrer_unknown_policy_fails_closed) {
+    eb_privacy_t p;
+    eb_priv_init(&p);
+    p.referrer_policy = (eb_referrer_policy_t)99;
+    char ref[64] = "stale";
+    ASSERT(eb_priv_apply_referrer(&p, "https://a.com/path", "https://b.com/", ref, sizeof(ref)) == 0);
+    ASSERT(ref[0] == '\0');
+    eb_priv_destroy(&p);
+}
+
+TEST(test_referrer_rejects_zero_length_buffer) {
+    eb_privacy_t p;
+    eb_priv_init(&p);
+    char ref[1] = { 'A' };
+    ASSERT(eb_priv_apply_referrer(&p, "https://a.com/", "https://b.com/", ref, 0) == -1);
+    ASSERT(ref[0] == 'A');   /* untouched */
+    eb_priv_destroy(&p);
+}
+
 TEST(test_referrer_origin_only_truncation) {
     /* Boundary: "https://source.com" is 18 chars; origin + '/' + '\0' needs
-       exactly 20 bytes. The old clamp wrote the terminator one past the
-       end whenever the origin did not fit -- the sentinel bytes catch it. */
+       exactly 20 bytes; anything smaller yields no referrer. The old clamp
+       wrote the terminator one past the end whenever the origin did not
+       fit -- the sentinel bytes catch it. */
     eb_privacy_t p;
     eb_priv_init(&p);
     p.referrer_policy = EB_REF_ORIGIN_ONLY;
@@ -145,11 +218,12 @@ TEST(test_referrer_origin_only_truncation) {
 
     memset(ref, 'X', sizeof(ref));
     eb_priv_apply_referrer(&p, "https://source.com/secret/page", "https://dest.com", ref, 19);
-    ASSERT(strcmp(ref, "https://source.co/") == 0);
+    ASSERT(ref[0] == '\0');   /* fails closed: no truncated, wrong origin */
     ASSERT(ref[19] == 'X');
 
     memset(ref, 'X', sizeof(ref));
     eb_priv_apply_referrer(&p, "https://source.com/secret/page", "https://dest.com", ref, 2);
+    ASSERT(ref[0] == '\0');
     ASSERT(ref[2] == 'X');
     eb_priv_destroy(&p);
 }
@@ -292,6 +366,11 @@ int main(void) {
     RUN(test_cookie_policy_block_third_party); RUN(test_cookie_policy_block_all);
     RUN(test_incognito_mode); RUN(test_tor_mode);
     RUN(test_referrer_none); RUN(test_referrer_origin_only); RUN(test_referrer_origin_only_truncation);
+    RUN(test_referrer_origin_only_fails_closed_when_too_long);
+    RUN(test_referrer_fails_closed_when_full_url_is_too_long);
+    RUN(test_referrer_full_copies_complete_url);
+    RUN(test_referrer_unknown_policy_fails_closed);
+    RUN(test_referrer_rejects_zero_length_buffer);
     RUN(test_exceptions); RUN(test_header_injection);
     RUN(test_tb_init); RUN(test_tb_parse_domain_filter);
     RUN(test_tb_parse_exception); RUN(test_tb_parse_comment);
