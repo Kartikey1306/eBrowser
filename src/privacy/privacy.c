@@ -112,7 +112,12 @@ int eb_priv_apply_referrer(const eb_privacy_t *p, const char *from,
         if (!s) { ref[0]='\0'; return 0; }
         const char *e = strchr(s+3, '/');
         size_t len = e ? (size_t)(e-from) : strlen(from);
-        if (len >= max) len = max-1;
+        /* The write is len origin bytes, then '/', then '\0': keep all of
+           it inside the caller's buffer. The old clamp (len = max-1) left
+           ref[max] written past the end. */
+        if (max == 0) return 0;
+        if (max == 1) { ref[0] = '\0'; return 0; }
+        if (len > max - 2) len = max - 2;
         memcpy(ref, from, len); ref[len]='/'; ref[len+1]='\0'; return 0;
     }
     case EB_REF_SAME_ORIGIN: {
