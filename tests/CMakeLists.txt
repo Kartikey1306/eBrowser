@@ -74,6 +74,10 @@ add_executable(test_privacy test_privacy.c)
 target_link_libraries(test_privacy PRIVATE eb_privacy)
 add_test(NAME test_privacy COMMAND test_privacy)
 
+add_executable(test_privacy_invariants test_privacy_invariants.c)
+target_link_libraries(test_privacy_invariants PRIVATE eb_privacy)
+add_test(NAME test_privacy_invariants COMMAND test_privacy_invariants)
+
 add_executable(test_tab_manager test_tab_manager.c)
 target_link_libraries(test_tab_manager PRIVATE eb_ui)
 add_test(NAME test_tab_manager COMMAND test_tab_manager)
