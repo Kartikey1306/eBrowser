@@ -84,6 +84,20 @@ export function normalizeInput(input: string): string {
     return trimmed;
   }
 
+  // host:port, which the URL parser would otherwise read as a scheme
+  // ("localhost:3000" parses with protocol "localhost:"). The host must be
+  // localhost or dotted, so tel:123 and mailto:123 are left alone.
+  const hostPort = trimmed.match(/^([a-z0-9-]+(?:\.[a-z0-9-]+)*):\d+(?=[/?#]|$)/i);
+  if (hostPort && (hostPort[1].includes('.') || hostPort[1].toLowerCase() === 'localhost')) {
+    const host = hostPort[1].toLowerCase();
+    const scheme = host === 'localhost' || host === '127.0.0.1' ? 'http' : 'https';
+    try {
+      return new URL(`${scheme}://${trimmed}`).href;
+    } catch {
+      return `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`;
+    }
+  }
+
   // Already a valid URL
   try {
     const url = new URL(trimmed);
