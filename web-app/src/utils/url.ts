@@ -70,7 +70,9 @@ export function formatDisplayUrl(url: URL): string {
   return display;
 }
 
-export function normalizeInput(input: string): string {
+const googleSearch = (query: string) => `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+
+export function normalizeInput(input: string, searchUrl: (query: string) => string = googleSearch): string {
   const trimmed = input.trim();
   if (!trimmed) return 'about:newtab';
 
@@ -94,7 +96,7 @@ export function normalizeInput(input: string): string {
     try {
       return new URL(`${scheme}://${trimmed}`).href;
     } catch {
-      return `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`;
+      return searchUrl(trimmed);
     }
   }
 
@@ -111,7 +113,7 @@ export function normalizeInput(input: string): string {
     try {
       return new URL(trimmed).href;
     } catch {
-      return `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`;
+      return searchUrl(trimmed);
     }
   }
 
@@ -127,7 +129,7 @@ export function normalizeInput(input: string): string {
   }
 
   // Treat as search query
-  return `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`;
+  return searchUrl(trimmed);
 }
 
 export function isSearchQuery(input: string): boolean {

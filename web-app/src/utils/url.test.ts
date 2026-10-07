@@ -111,6 +111,14 @@ describe('normalizeInput', () => {
     expect(normalizeInput('weather')).toBe('https://www.google.com/search?q=weather');
     expect(normalizeInput('.hidden')).toBe('https://www.google.com/search?q=.hidden');
   });
+
+  it('searches with the search URL it is given', () => {
+    const engine = (q: string) => `https://search.test/?q=${encodeURIComponent(q)}`;
+    expect(normalizeInput('hello world', engine)).toBe('https://search.test/?q=hello%20world');
+    expect(normalizeInput('weather', engine)).toBe('https://search.test/?q=weather');
+    expect(normalizeInput('example.com:99999', engine)).toBe('https://search.test/?q=example.com%3A99999');
+    expect(normalizeInput('example.com', engine)).toBe('https://example.com/');
+  });
 });
 
 describe('isSearchQuery', () => {

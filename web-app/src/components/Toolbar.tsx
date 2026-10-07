@@ -44,7 +44,7 @@ export default function Toolbar() {
   }, [activeTab?.url]);
 
   const handleNavigate = useCallback((value: string) => {
-    const url = normalizeInput(value);
+    const url = normalizeInput(value, store.getSearchUrl);
     if (activeTab) {
       store.navigateTo(url, activeTab.id);
     }
