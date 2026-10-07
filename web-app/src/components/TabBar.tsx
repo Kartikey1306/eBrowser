@@ -3,12 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Lock, Volume2, VolumeX, Pin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useBrowserStore, type Tab } from '@/store/browserStore';
-import { formatURL } from '@/utils/url';
 import TabContextMenu from './TabContextMenu';
 
 export default function TabBar() {
   const { t } = useTranslation();
-  const { tabs, activeTabId, setActiveTab, closeTab, openTab, moveTab, settings } = useBrowserStore();
+  const { tabs, activeTabId, setActiveTab, closeTab, openTab, moveTab } = useBrowserStore();
   const [contextMenu, setContextMenu] = useState<{ tab: Tab; x: number; y: number } | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const dragTabId = useRef<string | null>(null);

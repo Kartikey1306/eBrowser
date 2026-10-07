@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Search, Command, ArrowRight, Clock, Star, Settings, Shield, Download, Zap, MapPin, Key, FileText, BookOpen } from 'lucide-react';
 import { useBrowserStore } from '@/store/browserStore';
-import { normalizeInput } from '@/utils/url';
 
 interface CommandItem {
   id: string;

@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Settings, Palette, Shield, Search, Download, Globe, Accessibility,
-  Cpu, Info, ChevronRight, Moon, Sun, Monitor, Check, Lock,
-  Bell, MapPin, Camera, Mic, Database, Trash2, RefreshCw, Zap
+  Cpu, Info, ChevronRight, Moon, Sun, Monitor, Check,
+  Trash2, RefreshCw, Zap
 } from 'lucide-react';
 import { useBrowserStore, type Settings as SettingsType } from '@/store/browserStore';
 import { SUPPORTED_LANGUAGES } from '@/i18n/config';

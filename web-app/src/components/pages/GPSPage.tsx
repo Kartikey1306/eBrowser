@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Navigation, Compass, Wifi, RefreshCw, Globe, Clock, Thermometer, Wind } from 'lucide-react';
+import { MapPin, Navigation, Compass, Wifi, RefreshCw, Globe, Thermometer, Wind } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBrowserStore } from '@/store/browserStore';
 
@@ -97,6 +97,9 @@ export default function GPSPage() {
       fetchLocationName(gpsLocation.latitude, gpsLocation.longitude);
       fetchWeather(gpsLocation.latitude, gpsLocation.longitude);
     }
+    // Mount only: gpsLocation changes on every watchPosition fix, and refetching
+    // the place name and the weather on each one would hammer both services.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
