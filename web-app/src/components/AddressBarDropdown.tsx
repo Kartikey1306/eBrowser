@@ -102,12 +102,15 @@ export default function AddressBarDropdown({ query, onSelect, onClose }: Props) 
         setSelectedIndex(i => Math.max(i - 1, 0));
       } else if (e.key === 'Enter') {
         if (suggestions[selectedIndex]) {
+          e.preventDefault();
           onSelect(suggestions[selectedIndex].url);
         }
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    // Capture phase, so the highlighted suggestion is taken before the address
+    // bar's own Enter handler runs; that handler skips an Enter handled here.
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
   }, [suggestions, selectedIndex, onSelect]);
 
   if (suggestions.length === 0) return null;
