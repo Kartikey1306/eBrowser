@@ -8,8 +8,6 @@ export function useGPS() {
     if (!settings.enableGeolocation) return;
     if (!('geolocation' in navigator)) return;
 
-    let watchId: number;
-
     const success = (position: GeolocationPosition) => {
       setGpsLocation(position.coords);
     };
@@ -28,7 +26,7 @@ export function useGPS() {
     navigator.geolocation.getCurrentPosition(success, error, options);
 
     // Watch for updates
-    watchId = navigator.geolocation.watchPosition(success, error, options);
+    const watchId = navigator.geolocation.watchPosition(success, error, options);
 
     return () => {
       if (watchId) navigator.geolocation.clearWatch(watchId);

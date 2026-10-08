@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Star, Folder } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { bookmarkDB, type Bookmark } from '@/utils/database';
 import { useBrowserStore } from '@/store/browserStore';
 

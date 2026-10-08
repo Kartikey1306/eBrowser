@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Clock, Bookmark, Globe, ArrowUpRight, Star } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
+import { Search, Clock, Globe, ArrowUpRight, Star } from 'lucide-react';
 import { historyDB, bookmarkDB } from '@/utils/database';
 import { normalizeInput, getFaviconUrl } from '@/utils/url';
 import { useBrowserStore } from '@/store/browserStore';
@@ -20,9 +19,8 @@ interface Props {
   onClose: () => void;
 }
 
-export default function AddressBarDropdown({ query, onSelect, onClose }: Props) {
-  const { t } = useTranslation();
-  const { getSearchUrl, pinnedSites } = useBrowserStore();
+export default function AddressBarDropdown({ query, onSelect }: Props) {
+  const { getSearchUrl } = useBrowserStore();
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -70,7 +68,7 @@ export default function AddressBarDropdown({ query, onSelect, onClose }: Props) 
 
       // If looks like a URL, add direct navigation
       if (q.includes('.') && !q.includes(' ')) {
-        const normalized = normalizeInput(q);
+        const normalized = normalizeInput(q, getSearchUrl);
         if (!results.find(r => r.url === normalized)) {
           results.unshift({
             type: 'url',

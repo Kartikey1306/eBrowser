@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Shield, ShieldCheck, ShieldAlert, Eye, EyeOff, Lock, Globe, Fingerprint, Cookie, Wifi, Trash2, BarChart2 } from 'lucide-react';
+import React from 'react';
+import { Shield, ShieldCheck, ShieldAlert, Eye, EyeOff, Lock, Globe, Fingerprint, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { useBrowserStore } from '@/store/browserStore';
@@ -7,7 +7,6 @@ import { useBrowserStore } from '@/store/browserStore';
 export default function PrivacyPage() {
   const { t } = useTranslation();
   const { settings, updateSettings, addToast } = useBrowserStore();
-  const [showReport, setShowReport] = useState(false);
 
   const privacyScore = [
     settings.blockTrackers,

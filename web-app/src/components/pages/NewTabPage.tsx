@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Plus, X, Settings, MapPin, Wifi, WifiOff, Clock } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useBrowserStore } from '@/store/browserStore';
-import { normalizeInput, getFaviconUrl } from '@/utils/url';
+import { normalizeInput } from '@/utils/url';
 import { historyDB } from '@/utils/database';
 import type { HistoryEntry } from '@/utils/database';
 
@@ -38,7 +38,7 @@ export default function NewTabPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    const url = normalizeInput(searchQuery);
+    const url = normalizeInput(searchQuery, store.getSearchUrl);
     const activeTab = store.getActiveTab();
     if (activeTab) store.navigateTo(url, activeTab.id);
   };

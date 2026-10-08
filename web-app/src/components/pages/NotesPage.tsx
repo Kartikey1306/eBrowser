@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, Plus, Trash2, Edit2, Save, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { FileText, Plus, Trash2, Save, X } from 'lucide-react';
 import { db, type Note } from '@/utils/database';
 import { format } from 'date-fns';
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, X, CheckCircle, AlertCircle, FolderOpen, ExternalLink } from 'lucide-react';
+import { Download, X, CheckCircle, AlertCircle, FolderOpen } from 'lucide-react';
 import { useBrowserStore } from '@/store/browserStore';
 import { downloadDB, type DownloadItem } from '@/utils/database';
 import { getReadableFileSize } from '@/utils/url';

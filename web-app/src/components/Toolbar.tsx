@@ -1,13 +1,12 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
-  ChevronLeft, ChevronRight, RotateCw, X, Home, Star, StarOff,
-  Shield, ShieldAlert, ShieldOff, Lock, Unlock, Globe,
-  BookOpen, Download, Settings, Menu, Mic, Camera,
-  SlidersHorizontal, Share2, Printer, Maximize2, EyeOff,
-  Zap, Search, MapPin
+  ChevronLeft, ChevronRight, RotateCw, X, Home, Star,
+  ShieldOff, Lock, Unlock, Globe,
+  BookOpen, Download, Menu,
+  Zap, MapPin
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { useBrowserStore } from '@/store/browserStore';
 import { normalizeInput, getSecurityLevel, isInternalPage } from '@/utils/url';
 import { bookmarkDB } from '@/utils/database';
@@ -28,11 +27,12 @@ export default function Toolbar() {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Sync address bar with active tab URL
+  const activeAddress = activeTab ? activeTab.displayUrl || activeTab.url : null;
   useEffect(() => {
-    if (!isFocused && activeTab) {
-      setAddressValue(activeTab.displayUrl || activeTab.url);
+    if (!isFocused && activeAddress !== null) {
+      setAddressValue(activeAddress);
     }
-  }, [activeTab?.url, activeTab?.displayUrl, isFocused]);
+  }, [activeAddress, isFocused]);
 
   // Check bookmark status
   useEffect(() => {
@@ -44,7 +44,7 @@ export default function Toolbar() {
   }, [activeTab?.url]);
 
   const handleNavigate = useCallback((value: string) => {
-    const url = normalizeInput(value);
+    const url = normalizeInput(value, store.getSearchUrl);
     if (activeTab) {
       store.navigateTo(url, activeTab.id);
     }

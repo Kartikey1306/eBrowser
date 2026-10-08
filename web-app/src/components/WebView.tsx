@@ -22,7 +22,6 @@ interface Props {
 }
 
 export default function WebView({ tab }: Props) {
-  const { t } = useTranslation();
   const store = useBrowserStore();
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [error, setError] = useState<string | null>(null);

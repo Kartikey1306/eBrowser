@@ -21,14 +21,6 @@ export interface ParsedURL {
 }
 
 const INTERNAL_SCHEMES = new Set(['about:', 'chrome:', 'ebrowser:', 'data:', 'blob:', 'javascript:']);
-const SEARCH_ENGINES_PATTERNS = [
-  /^(www\.)?google\./,
-  /^(www\.)?bing\./,
-  /^(www\.)?duckduckgo\./,
-  /^(www\.)?yahoo\./,
-  /^search\.brave\./,
-  /^(www\.)?ecosia\./,
-];
 
 export function parseURL(input: string): ParsedURL | null {
   try {
@@ -70,7 +62,9 @@ export function formatDisplayUrl(url: URL): string {
   return display;
 }
 
-export function normalizeInput(input: string): string {
+const googleSearch = (query: string) => `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+
+export function normalizeInput(input: string, searchUrl: (query: string) => string = googleSearch): string {
   const trimmed = input.trim();
   if (!trimmed) return 'about:newtab';
 
@@ -82,6 +76,20 @@ export function normalizeInput(input: string): string {
   // Data URLs
   if (trimmed.startsWith('data:') || trimmed.startsWith('blob:')) {
     return trimmed;
+  }
+
+  // host:port, which the URL parser would otherwise read as a scheme
+  // ("localhost:3000" parses with protocol "localhost:"). The host must be
+  // localhost or dotted, so tel:123 and mailto:123 are left alone.
+  const hostPort = trimmed.match(/^([a-z0-9-]+(?:\.[a-z0-9-]+)*):\d+(?=[/?#]|$)/i);
+  if (hostPort && (hostPort[1].includes('.') || hostPort[1].toLowerCase() === 'localhost')) {
+    const host = hostPort[1].toLowerCase();
+    const scheme = host === 'localhost' || host === '127.0.0.1' ? 'http' : 'https';
+    try {
+      return new URL(`${scheme}://${trimmed}`).href;
+    } catch {
+      return searchUrl(trimmed);
+    }
   }
 
   // Already a valid URL
@@ -97,7 +105,7 @@ export function normalizeInput(input: string): string {
     try {
       return new URL(trimmed).href;
     } catch {
-      return `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`;
+      return searchUrl(trimmed);
     }
   }
 
@@ -113,7 +121,7 @@ export function normalizeInput(input: string): string {
   }
 
   // Treat as search query
-  return `https://www.google.com/search?q=${encodeURIComponent(trimmed)}`;
+  return searchUrl(trimmed);
 }
 
 export function isSearchQuery(input: string): boolean {
