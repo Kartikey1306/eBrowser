@@ -70,7 +70,7 @@ export default function AddressBarDropdown({ query, onSelect, onClose }: Props) 
 
       // If looks like a URL, add direct navigation
       if (q.includes('.') && !q.includes(' ')) {
-        const normalized = normalizeInput(q);
+        const normalized = normalizeInput(q, getSearchUrl);
         if (!results.find(r => r.url === normalized)) {
           results.unshift({
             type: 'url',
