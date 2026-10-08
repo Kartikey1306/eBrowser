@@ -62,27 +62,30 @@ export default function TabBar() {
       style={{ minHeight: '36px' }}
     >
       {/* Pinned tabs first */}
-      {tabs.filter(t => t.isPinned).map((tab, index) => (
-        <TabItem
-          key={tab.id}
-          tab={tab}
-          isActive={tab.id === activeTabId}
-          isPinned
-          index={index}
-          dragOverIndex={dragOverIndex}
-          onActivate={() => setActiveTab(tab.id)}
-          onClose={() => closeTab(tab.id)}
-          onDragStart={(e) => handleDragStart(e, tab.id)}
-          onDragOver={(e) => handleDragOver(e, index)}
-          onDrop={(e) => handleDrop(e, index)}
-          onDragEnd={handleDragEnd}
-          onContextMenu={(e) => handleContextMenu(e, tab)}
-          onMiddleClick={(e) => handleMiddleClick(e, tab.id)}
-        />
-      ))}
+      {tabs.filter(t => t.isPinned).map(tab => {
+        const realIndex = tabs.findIndex(t => t.id === tab.id);
+        return (
+          <TabItem
+            key={tab.id}
+            tab={tab}
+            isActive={tab.id === activeTabId}
+            isPinned
+            index={realIndex}
+            dragOverIndex={dragOverIndex}
+            onActivate={() => setActiveTab(tab.id)}
+            onClose={() => closeTab(tab.id)}
+            onDragStart={(e) => handleDragStart(e, tab.id)}
+            onDragOver={(e) => handleDragOver(e, realIndex)}
+            onDrop={(e) => handleDrop(e, realIndex)}
+            onDragEnd={handleDragEnd}
+            onContextMenu={(e) => handleContextMenu(e, tab)}
+            onMiddleClick={(e) => handleMiddleClick(e, tab.id)}
+          />
+        );
+      })}
 
       {/* Regular tabs */}
-      {tabs.filter(t => !t.isPinned).map((tab, index) => {
+      {tabs.filter(t => !t.isPinned).map(tab => {
         const realIndex = tabs.findIndex(t => t.id === tab.id);
         return (
           <TabItem
@@ -171,6 +174,14 @@ function TabItem({
         ${isDragOver ? 'ring-2 ring-primary-500 ring-inset' : ''}
         ${tab.isIncognito ? 'bg-gray-800 dark:bg-gray-950 text-gray-200' : ''}
       `}
+      draggable
+      // framer-motion keeps onDragStart/onDragEnd for its own pan gesture and
+      // never passes them to the DOM, so the native HTML5 drag start and end
+      // are bound in the capture phase instead.
+      onDragStartCapture={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      onDragEndCapture={onDragEnd}
       onContextMenu={onContextMenu}
       onMouseDown={onMiddleClick}
       onClick={onActivate}
