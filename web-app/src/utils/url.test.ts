@@ -86,6 +86,23 @@ describe('normalizeInput', () => {
     expect(normalizeInput('example.com/a?b=c')).toBe('https://example.com/a?b=c');
   });
 
+  it('treats host:port as an address, not as a scheme', () => {
+    expect(normalizeInput('localhost:3000')).toBe('http://localhost:3000/');
+    expect(normalizeInput('localhost:5173/app?x=1')).toBe('http://localhost:5173/app?x=1');
+    expect(normalizeInput('127.0.0.1:8000')).toBe('http://127.0.0.1:8000/');
+    expect(normalizeInput('example.com:8080/path')).toBe('https://example.com:8080/path');
+    expect(normalizeInput('192.168.1.1:8080')).toBe('https://192.168.1.1:8080/');
+  });
+
+  it('searches for host:port with a port out of range', () => {
+    expect(normalizeInput('example.com:99999')).toBe('https://www.google.com/search?q=example.com%3A99999');
+  });
+
+  it('leaves single-word schemes with digits alone', () => {
+    expect(normalizeInput('tel:12345')).toBe('tel:12345');
+    expect(normalizeInput('mailto:someone@example.com')).toBe('mailto:someone@example.com');
+  });
+
   it('searches for anything with a space, and encodes the query', () => {
     expect(normalizeInput('what is 2.5 & 3')).toBe('https://www.google.com/search?q=what%20is%202.5%20%26%203');
   });
