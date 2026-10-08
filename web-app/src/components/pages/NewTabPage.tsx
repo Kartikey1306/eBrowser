@@ -38,7 +38,7 @@ export default function NewTabPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    const url = normalizeInput(searchQuery);
+    const url = normalizeInput(searchQuery, store.getSearchUrl);
     const activeTab = store.getActiveTab();
     if (activeTab) store.navigateTo(url, activeTab.id);
   };
