@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { BookOpen, Check, Trash2, Clock, ExternalLink } from 'lucide-react';
-import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { readingListDB, type ReadingListItem } from '@/utils/database';
 import { useBrowserStore } from '@/store/browserStore';
 import { format } from 'date-fns';
 
 export default function ReadingListPage() {
-  const { t } = useTranslation();
   const store = useBrowserStore();
   const [items, setItems] = useState<ReadingListItem[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread' | 'read'>('all');

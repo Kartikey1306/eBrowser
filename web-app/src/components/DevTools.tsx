@@ -30,8 +30,8 @@ export default function DevTools() {
         try {
           // Safe eval simulation
           return `→ ${consoleInput} (evaluated in sandbox)`;
-        } catch (err: any) {
-          return `✗ Error: ${err.message}`;
+        } catch (err) {
+          return `✗ Error: ${err instanceof Error ? err.message : String(err)}`;
         }
       })();
       setConsoleLog(prev => [

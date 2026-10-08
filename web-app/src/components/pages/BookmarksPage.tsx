@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Star, Search, FolderPlus, Trash2, Edit2, ExternalLink, X, Folder, Tag } from 'lucide-react';
+import { Star, Search, FolderPlus, Trash2, Edit2, ExternalLink, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { bookmarkDB, type Bookmark } from '@/utils/database';
@@ -11,16 +11,17 @@ export default function BookmarksPage() {
   const [bookmarks, setBookmarks] = useState<Bookmark[]>([]);
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
+  const [, setEditingId] = useState<number | null>(null);
 
-  const loadBookmarks = async () => {
-    setLoading(true);
-    const data = query ? await bookmarkDB.search(query) : await bookmarkDB.getAll();
-    setBookmarks(data);
-    setLoading(false);
-  };
-
-  useEffect(() => { loadBookmarks(); }, [query]);
+  useEffect(() => {
+    const loadBookmarks = async () => {
+      setLoading(true);
+      const data = query ? await bookmarkDB.search(query) : await bookmarkDB.getAll();
+      setBookmarks(data);
+      setLoading(false);
+    };
+    loadBookmarks();
+  }, [query]);
 
   const handleDelete = async (id: number) => {
     await bookmarkDB.delete(id);

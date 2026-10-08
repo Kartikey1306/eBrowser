@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Download, Trash2, FolderOpen, X, CheckCircle, AlertCircle, Pause, Play, RefreshCw } from 'lucide-react';
+import { Download, Trash2, FolderOpen, X, CheckCircle, AlertCircle, Pause, RefreshCw } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { downloadDB, type DownloadItem } from '@/utils/database';

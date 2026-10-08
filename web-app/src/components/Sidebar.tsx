@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Star, Clock, Zap, BookOpen, FileText, Key, ChevronRight } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, Star, Clock, Zap } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useBrowserStore } from '@/store/browserStore';
 import { historyDB, bookmarkDB, type HistoryEntry, type Bookmark } from '@/utils/database';

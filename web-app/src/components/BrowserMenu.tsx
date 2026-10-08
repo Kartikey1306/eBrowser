@@ -2,8 +2,8 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import {
   Plus, BookOpen, Clock, Download, Settings, Printer, Share2,
-  ZoomIn, ZoomOut, Maximize2, EyeOff, Zap, Shield, Globe,
-  FileText, Key, MapPin, Star, Code2, RefreshCw, X
+  ZoomIn, ZoomOut, Maximize2, EyeOff, Zap, Shield,
+  FileText, Key, MapPin, Star, Code2, RefreshCw
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useBrowserStore } from '@/store/browserStore';

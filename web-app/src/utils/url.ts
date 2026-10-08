@@ -21,14 +21,6 @@ export interface ParsedURL {
 }
 
 const INTERNAL_SCHEMES = new Set(['about:', 'chrome:', 'ebrowser:', 'data:', 'blob:', 'javascript:']);
-const SEARCH_ENGINES_PATTERNS = [
-  /^(www\.)?google\./,
-  /^(www\.)?bing\./,
-  /^(www\.)?duckduckgo\./,
-  /^(www\.)?yahoo\./,
-  /^search\.brave\./,
-  /^(www\.)?ecosia\./,
-];
 
 export function parseURL(input: string): ParsedURL | null {
   try {

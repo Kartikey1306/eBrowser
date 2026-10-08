@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Zap, Plus, Trash2, Settings, ToggleLeft, ToggleRight, Shield, Globe, Bell } from 'lucide-react';
+import { Zap, Plus, Trash2, Settings, ToggleLeft, ToggleRight, Globe } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 

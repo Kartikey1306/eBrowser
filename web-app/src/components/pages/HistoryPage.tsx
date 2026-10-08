@@ -4,7 +4,6 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { historyDB, type HistoryEntry } from '@/utils/database';
 import { useBrowserStore } from '@/store/browserStore';
-import { formatURL } from '@/utils/url';
 import { format, isToday, isYesterday, isThisWeek } from 'date-fns';
 
 export default function HistoryPage() {
@@ -14,14 +13,15 @@ export default function HistoryPage() {
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const loadHistory = async () => {
-    setLoading(true);
-    const data = query ? await historyDB.search(query) : await historyDB.getRecent(200);
-    setHistory(data);
-    setLoading(false);
-  };
-
-  useEffect(() => { loadHistory(); }, [query]);
+  useEffect(() => {
+    const loadHistory = async () => {
+      setLoading(true);
+      const data = query ? await historyDB.search(query) : await historyDB.getRecent(200);
+      setHistory(data);
+      setLoading(false);
+    };
+    loadHistory();
+  }, [query]);
 
   const handleDelete = async (id: number) => {
     await historyDB.deleteEntry(id);
