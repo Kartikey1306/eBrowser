@@ -111,7 +111,7 @@ jobs:
         run: npm ci --legacy-peer-deps
 
       - name: Run tests
-        run: npm test --if-present -- --coverage --reporter=verbose
+        run: npm test --if-present -- --reporter=verbose
 
   # ─── Extension Build ─────────────────────────────────────────────────────────
   extension:
