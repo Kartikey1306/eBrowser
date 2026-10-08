@@ -54,6 +54,7 @@ export default function Toolbar() {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
+      if (e.nativeEvent.defaultPrevented) return;
       handleNavigate(addressValue);
     } else if (e.key === 'Escape') {
       setAddressValue(activeTab?.displayUrl ?? '');
